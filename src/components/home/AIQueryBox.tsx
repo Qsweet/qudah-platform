@@ -12,15 +12,37 @@ import { cn } from '@/lib/utils';
 export function AIQueryBox() {
     const { messages, append, isLoading } = useChat({
         api: '/api/ai/query',
+        onError: (error) => {
+            console.error('AI Chat Error:', error);
+            alert('Failed to send message: ' + error.message);
+        }
     } as any) as any;
     const [query, setQuery] = React.useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!query.trim() || isLoading) return;
+        console.log('handleSubmit called', { query, isLoading });
 
-        append({ role: 'user', content: query });
-        setQuery('');
+        if (!query.trim()) {
+            console.log('Query empty, returning');
+            return;
+        }
+
+        if (isLoading) {
+            console.log('isLoading is true, blocking submission');
+            // optional: Force it anyway for debugging?
+            // return; 
+        }
+
+        try {
+            console.log('Calling append...');
+            await append({ role: 'user', content: query });
+            console.log('Append success');
+            setQuery('');
+        } catch (err) {
+            console.error('Append failed:', err);
+            alert('Error sending: ' + String(err));
+        }
     };
 
     return (
