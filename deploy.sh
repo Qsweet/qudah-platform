@@ -2,7 +2,7 @@
 
 # Pull latest changes
 echo "Pulling latest changes..."
-git pull origin master
+git pull origin main
 
 # Stop existing container
 echo "Stopping existing containers..."
