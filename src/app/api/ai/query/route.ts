@@ -5,17 +5,13 @@ import { z } from 'zod';
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-    const { prompt } = await req.json();
+    const { messages } = await req.json();
 
     // Validate Input
-    const schema = z.object({
-        prompt: z.string().min(5),
-    });
-
-    const parsed = schema.safeParse({ prompt });
-
-    if (!parsed.success) {
-        return new Response('Invalid prompt. Must be at least 5 characters.', { status: 400 });
+    // Vercel AI SDK sends an array of messages.
+    // We can do basic validation here if needed, or rely on the SDK type safety on frontend.
+    if (!messages || !Array.isArray(messages)) {
+        return new Response('Invalid request body', { status: 400 });
     }
 
     // SIMULATED RETRIEVAL (RAG Placeholder)
@@ -36,9 +32,7 @@ export async function POST(req: Request) {
       CONTEXT:
       ${context}
     `,
-        messages: [
-            { role: 'user', content: parsed.data.prompt }
-        ],
+        messages, // Pass the messages array directly
     });
 
     return result.toTextStreamResponse();
