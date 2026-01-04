@@ -6,11 +6,11 @@ git pull origin main
 
 # Stop existing container
 echo "Stopping existing containers..."
-docker-compose down
+docker compose down
 
 # Build and start new container
 echo "Building and starting new container..."
-docker-compose up -d --build
+docker compose up -d --build
 
 # Clean up unused images
 echo "Cleaning up unused images..."
