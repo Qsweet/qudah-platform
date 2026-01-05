@@ -18,11 +18,13 @@ npm ci
 
 # 3. Build application
 echo "🛠️ Building Next.js application..."
+rm -rf .next
 npm run build
 
 # 4. Prepare Standalone Build
 echo "📂 Preparing standalone build..."
 # Ensure destination directories exist
+rm -rf .next/standalone
 mkdir -p .next/standalone/public
 mkdir -p .next/standalone/.next/static
 
