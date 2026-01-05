@@ -9,7 +9,7 @@ export default function Home() {
 
         <div className="space-y-6 max-w-4xl mx-auto">
           <div className="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium tracking-wide">
-            SYSTEM ONLINE • V2.0.0
+            SYSTEM ONLINE • V2.1.0-DEBUG
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white">
             Architecting the <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Future of Web</span>
