@@ -17,7 +17,7 @@ export function AIQueryBox() {
             console.error('AI Chat Error:', error);
             alert('Failed to send message: ' + (error?.message || String(error)));
         }
-    });
+    } as any);
     const [query, setQuery] = React.useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {

@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 
 # Configuration
 APP_DIR="/var/www/mohammad-al-qudah-platform" # Adjust this path as needed
