@@ -1,8 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useChat } from '@ai-sdk/react';
-import { Button } from '@/components/ui/button';
 import { Send, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 // React import merged to top.
@@ -10,39 +8,64 @@ import { cn } from '@/lib/utils';
 // We will use raw Tailwind classes for now to speed up logic implementation.
 
 export function AIQueryBox() {
-    const { messages, append, isLoading } = (useChat({
-        api: '/api/ai/query',
-        streamProtocol: 'text',
-        onError: (error: any) => {
-            console.error('AI Chat Error:', error);
-            alert('Failed to send message: ' + (error?.message || String(error)));
-        }
-    } as any) as any);
+    const [messages, setMessages] = React.useState<any[]>([]);
     const [query, setQuery] = React.useState('');
+    const [isLoading, setIsLoading] = React.useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('handleSubmit called', { query, isLoading });
+        if (!query.trim() || isLoading) return;
 
-        if (!query.trim()) {
-            console.log('Query empty, returning');
-            return;
-        }
+        const userMessage = { id: Date.now().toString(), role: 'user', content: query };
+        const newMessages = [...messages, userMessage];
 
-        if (isLoading) {
-            console.log('isLoading is true, blocking submission');
-            // optional: Force it anyway for debugging?
-            // return; 
-        }
+        setMessages(newMessages);
+        setQuery('');
+        setIsLoading(true);
 
         try {
-            console.log('Calling append...');
-            await append({ role: 'user', content: query });
-            console.log('Append success');
-            setQuery('');
-        } catch (err) {
-            console.error('Append failed:', err);
-            alert('Error sending: ' + String(err));
+            const response = await fetch('/api/ai/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: newMessages }),
+            });
+
+            if (!response.ok) throw new Error(response.statusText);
+
+            // Create placeholder for assistant response
+            const assistantMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: '' };
+            setMessages(prev => [...prev, assistantMessage]);
+
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+
+            if (!reader) throw new Error('No reader available');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+
+                // Update the last message (assistant) with new content
+                setMessages(prev => {
+                    const lastMsg = prev[prev.length - 1];
+                    // Ensure we are updating the correct message
+                    if (lastMsg.role === 'assistant') {
+                        return [
+                            ...prev.slice(0, -1),
+                            { ...lastMsg, content: lastMsg.content + chunk }
+                        ];
+                    }
+                    return prev;
+                });
+            }
+
+        } catch (err: any) {
+            console.error('Chat Error:', err);
+            alert('Failed to send message: ' + err.message);
+        } finally {
+            setIsLoading(false);
         }
     };
 
