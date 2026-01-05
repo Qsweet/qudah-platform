@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, vector, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Enums
@@ -101,4 +101,16 @@ export const commentsRelations = relations(comments, ({ one }) => ({
         fields: [comments.userId],
         references: [users.id],
     }),
+}));
+// ... existing relations ...
+
+export const embeddings = pgTable('embeddings', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    content: text('content').notNull(),
+    embedding: vector('embedding', { dimensions: 1536 }).notNull(),
+    relatedId: uuid('related_id'), // Can reference post or course dynamically, or use separate columns
+    type: text('type').notNull(), // 'post' | 'course'
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+    embeddingIndex: index('embedding_idx').using('hnsw', table.embedding.op('vector_cosine_ops')),
 }));
