@@ -114,3 +114,12 @@ export const embeddings = pgTable('embeddings', {
 }, (table) => ({
     embeddingIndex: index('embedding_idx').using('hnsw', table.embedding.op('vector_cosine_ops')),
 }));
+
+export const knowledgeEntries = pgTable('knowledge_entries', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: text('title').notNull(),
+    content: text('content').notNull(),
+    tags: text('tags').array(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});

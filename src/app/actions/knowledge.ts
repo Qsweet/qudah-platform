@@ -1,0 +1,66 @@
+'use server';
+
+import { db } from '@/db';
+import { knowledgeEntries, embeddings } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { openai } from '@ai-sdk/openai';
+import { embed } from 'ai';
+import { revalidatePath } from 'next/cache';
+
+export async function createKnowledgeEntry(data: { title: string; content: string; tags: string }) {
+    try {
+        const { title, content, tags } = data;
+        const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+
+        // 1. Insert into Knowledge Table
+        const [entry] = await db.insert(knowledgeEntries).values({
+            title,
+            content,
+            tags: tagList
+        }).returning();
+
+        // 2. Generate Embedding
+        const { embedding } = await embed({
+            model: openai.embedding('text-embedding-3-small'),
+            value: `Title: ${title}\nContent: ${content}`,
+        });
+
+        // 3. Insert into Embeddings Table (Vector Index)
+        await db.insert(embeddings).values({
+            content: `[Manual Knowledge] ${title}: ${content}`,
+            embedding: embedding,
+            relatedId: entry.id,
+            type: 'manual'
+        });
+
+        revalidatePath('/admin/knowledge');
+        return { success: true, message: 'Knowledge entry created and indexed.' };
+
+    } catch (error: any) {
+        console.error('Failed to create knowledge entry:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+export async function deleteKnowledgeEntry(id: string) {
+    try {
+        // 1. Delete from Knowledge Table
+        await db.delete(knowledgeEntries).where(eq(knowledgeEntries.id, id));
+
+        // 2. Delete from Embeddings Table
+        // Note: We need to match relatedId AND type='manual' to be safe, 
+        // though ID should be unique enough if UUID.
+        await db.delete(embeddings).where(eq(embeddings.relatedId, id));
+
+        revalidatePath('/admin/knowledge');
+        return { success: true, message: 'Knowledge entry deleted.' };
+
+    } catch (error: any) {
+        console.error('Failed to delete knowledge entry:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+export async function getKnowledgeEntries() {
+    return await db.select().from(knowledgeEntries).orderBy(knowledgeEntries.createdAt);
+}
