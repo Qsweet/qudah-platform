@@ -44,22 +44,27 @@ export async function POST(req: Request) {
   console.log(`Found ${similarContent.length} relevant items.`);
 
   // 3. Stream Response
-  try {
-    const result = streamText({
-      model: openai('gpt-4o'),
-      system: `
-        You are Qudah-GPT, an AI assistant for Mohammad Al Qudah's personal platform.
-        Use the following context to answer the user's question.
+  if (similarContent.length === 0) {
+    return new Response('I am a private advisor. I can only answer questions based on the knowledge base provided by Mohammad Al Qudah.', { status: 200 });
+  }
+
+  const result = streamText({
+    model: openai('gpt-4o'),
+    system: `
+        You are a private/strict advisor for Mohammad Al Qudah's platform.
+        You MUST ONLY answer based on the provided CONTEXT.
+        If the answer is not in the context, politely state that you do not have that information in your knowledge base.
+        DO NOT use outside knowledge or general training data to answer factual questions.
         
         CONTEXT:
         ${contextText}
       `,
-      messages,
-    });
+    messages,
+  });
 
-    return result.toTextStreamResponse();
-  } catch (error) {
-    console.error('Error in streamText:', error);
-    return new Response('AI generation failed', { status: 500 });
-  }
+  return result.toTextStreamResponse();
+} catch (error) {
+  console.error('Error in streamText:', error);
+  return new Response('AI generation failed', { status: 500 });
+}
 }

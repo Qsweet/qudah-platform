@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { openai } from '@ai-sdk/openai';
 import { embed } from 'ai';
 import { revalidatePath } from 'next/cache';
+import { parseFile } from '@/lib/parsers';
 
 export async function createKnowledgeEntry(data: { title: string; content: string; tags: string }) {
     try {
@@ -57,6 +58,63 @@ export async function deleteKnowledgeEntry(id: string) {
 
     } catch (error: any) {
         console.error('Failed to delete knowledge entry:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+
+export async function uploadKnowledgeFile(formData: FormData) {
+    try {
+        const file = formData.get('file') as File;
+        const tags = formData.get('tags') as string;
+
+        if (!file) throw new Error('No file provided');
+
+        // 1. Parse File Content
+        const text = await parseFile(file);
+        if (!text || text.trim().length === 0) throw new Error('File is empty or could not be parsed');
+
+        const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+        tagList.push('file-upload');
+
+        // 2. Chunking (Simple implementation: split by 4000 chars overlap)
+        // ideally we use a real chunker, but for now this works.
+        const CHUNK_SIZE = 4000;
+        const chunks = [];
+        for (let i = 0; i < text.length; i += CHUNK_SIZE) {
+            chunks.push(text.slice(i, i + CHUNK_SIZE));
+        }
+
+        let count = 0;
+        for (const chunk of chunks) {
+            const chunkTitle = `${file.name} (Part ${count + 1}/${chunks.length})`;
+
+            // 3. Create Entry & Embedding
+            const [entry] = await db.insert(knowledgeEntries).values({
+                title: chunkTitle,
+                content: chunk,
+                tags: tagList
+            }).returning();
+
+            const { embedding } = await embed({
+                model: openai.embedding('text-embedding-3-small'),
+                value: `Title: ${chunkTitle}\nContent: ${chunk}`,
+            });
+
+            await db.insert(embeddings).values({
+                content: `[File: ${file.name}] ${chunk}`,
+                embedding: embedding,
+                relatedId: entry.id,
+                type: 'manual'
+            });
+            count++;
+        }
+
+        revalidatePath('/admin/knowledge');
+        return { success: true, message: `processed ${count} chunks from ${file.name}` };
+
+    } catch (error: any) {
+        console.error('Upload failed:', error);
         return { success: false, message: error.message };
     }
 }
