@@ -24,7 +24,6 @@ npm run build
 # 4. Prepare Standalone Build
 echo "📂 Preparing standalone build..."
 # Ensure destination directories exist
-rm -rf .next/standalone
 mkdir -p .next/standalone/public
 mkdir -p .next/standalone/.next/static
 
