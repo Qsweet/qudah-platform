@@ -12,11 +12,12 @@ import { cn } from '@/lib/utils';
 export function AIQueryBox() {
     const { messages, append, isLoading } = useChat({
         api: '/api/ai/query',
+        streamProtocol: 'text',
         onError: (error: any) => {
             console.error('AI Chat Error:', error);
             alert('Failed to send message: ' + (error?.message || String(error)));
         }
-    } as any) as any;
+    });
     const [query, setQuery] = React.useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {

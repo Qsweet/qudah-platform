@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       messages,
     });
 
-    return result.toUIMessageStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('Error in streamText:', error);
     return new Response('AI generation failed', { status: 500 });
