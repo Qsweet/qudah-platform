@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 import { openai } from '@ai-sdk/openai';
 import { embed } from 'ai';
 import { revalidatePath } from 'next/cache';
-import { parseFile } from '@/lib/parsers';
+import { parseFile } from '../../lib/parsers';
 
 export async function createKnowledgeEntry(data: { title: string; content: string; tags: string }) {
     try {

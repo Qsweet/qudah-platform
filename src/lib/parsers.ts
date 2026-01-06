@@ -1,5 +1,5 @@
 
-import pdf from 'pdf-parse';
+const pdf = require('pdf-parse');
 import mammoth from 'mammoth';
 
 export async function parseFile(file: File): Promise<string> {

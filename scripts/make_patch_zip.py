@@ -13,16 +13,17 @@ def zip_dir(path, ziph):
 def create_patch():
     print("Creating patch_kb.zip...")
     with zipfile.ZipFile('patch_kb.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
-        # Add specific folders
-        for folder in ['src/app/admin', 'src/app/actions']:
-            full_path = os.path.join("d:/mohammad-al-qudah-platform", folder)
-            if os.path.exists(full_path):
-                zip_dir(full_path, zipf)
-            else:
-                print(f"Warning: {folder} not found")
+        # Add entire src directory
+        if os.path.exists("d:/mohammad-al-qudah-platform/src"):
+             zip_dir("d:/mohammad-al-qudah-platform/src", zipf)
         
-        # Add schema
-        zipf.write(os.path.join("d:/mohammad-al-qudah-platform", 'src/db/schema.ts'), 'src/db/schema.ts')
+        # Add root config files
+        for file in ['ecosystem.config.js', 'package.json', 'next.config.ts', 'tsconfig.json']:
+            full_path = os.path.join("d:/mohammad-al-qudah-platform", file)
+            if os.path.exists(full_path):
+                zipf.write(full_path, file)
+            else:
+                 print(f"Warning: {file} not found")
     
     print("Patch created successfully.")
 
