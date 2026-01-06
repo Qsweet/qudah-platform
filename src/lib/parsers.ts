@@ -1,5 +1,5 @@
 
-const pdf = require('pdf-parse');
+
 import mammoth from 'mammoth';
 
 export async function parseFile(file: File): Promise<string> {
@@ -7,6 +7,7 @@ export async function parseFile(file: File): Promise<string> {
     const type = file.type;
 
     if (type === 'application/pdf') {
+        const pdf = require('pdf-parse');
         const data = await pdf(buffer);
         return data.text;
     }
