@@ -24,6 +24,9 @@ def run_hard_deploy():
             "echo '📥 Pulling latest code...'",
             "cd /root/qudah-platform && git fetch origin && git reset --hard origin/main",
             
+            "echo '📦 Installing dependencies...'",
+            "cd /root/qudah-platform && npm install",
+
             "echo '🛠️ Building (Fresh)...'",
             "cd /root/qudah-platform && npm run build",
             

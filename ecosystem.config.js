@@ -10,6 +10,7 @@ module.exports = {
                 PORT: 3000,
                 // Environment variables will be injected here or loaded from .env
             },
+            cwd: '/root/qudah-platform',
         },
     ],
 };
